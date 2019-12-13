@@ -5,8 +5,9 @@
 #define WIDTH 900
 #define HEIGHT 700
 #define FIELDS 11
-#define IMG_PATH "D:\\Aplikacje\\DynaBlaster\\bin\\Debug\\a.bmp"
+#define IMG_PATH "D:\\Aplikacje\\DynaBlaster\\bin\\Debug\\player.bmp"
 #define TEXTURE_PATH "D:\\Aplikacje\\DynaBlaster\\bin\\Debug\\game.png"
+#define PLAYER_FRAMES 5
 
 SDL_Texture *initialize_texture_from_file(const char* file_name, SDL_Renderer *renderer);
 float WidthField = WIDTH/(float)(FIELDS+2);
@@ -33,11 +34,40 @@ int main (int argc, char *argv[]) {
     SDL_Rect character;
     character.x = WidthField+5;
     character.y = HeightField+5;
-    character.w = WidthField*0.8;
-    character.h = HeightField*0.8;
+    character.w = WidthField*0.75;
+    character.h = HeightField*0.75;
+
+    SDL_Rect character_tex[5];
+
+        character_tex[ 0 ].x =   0;
+        character_tex[ 0 ].y =   0;
+        character_tex[ 0 ].w =  25;
+        character_tex[ 0 ].h =  30;
+
+        character_tex[ 1 ].x =  25;
+        character_tex[ 1 ].y =   0;
+        character_tex[ 1 ].w =  25;
+        character_tex[ 1 ].h =  30;
+
+        character_tex[ 2 ].x =  50;
+        character_tex[ 2 ].y =   0;
+        character_tex[ 2 ].w =  25;
+        character_tex[ 2 ].h =  30;
+
+        character_tex[ 3 ].x =  75;
+        character_tex[ 3 ].y =   0;
+        character_tex[ 3 ].w =  25;
+        character_tex[ 3 ].h =  30;
+
+        character_tex[ 4 ].x = 100;
+        character_tex[ 4 ].y =   0;
+        character_tex[ 4 ].w =  25;
+        character_tex[ 4 ].h =  30;
 
     int running = 1;
     SDL_Event event;
+    float frame = 0;
+    int licz=0;
     while(running)
     {
         // Process events
@@ -50,22 +80,37 @@ int main (int argc, char *argv[]) {
 
             switch (event.key.keysym.sym)
             {
-                case SDLK_LEFT:  character.x-=4; break;
-                case SDLK_RIGHT: character.x+=5; break;
-                case SDLK_UP:    character.y-=5; break;
-                case SDLK_DOWN:  character.y+=5; break;
+                case SDLK_LEFT:
+                    character.x-=5;
+                    if(detect_collision(character))
+                        character.x+=5;
+                    break;
+                case SDLK_RIGHT:
+                    character.x+=5;
+                    if(detect_collision(character))
+                        character.x-=5;
+                    break;
+                case SDLK_UP:
+                    character.y-=5;
+                    if(detect_collision(character))
+                        character.y+=5;
+                    break;
+                case SDLK_DOWN:
+                    character.y+=5;
+                    if(detect_collision(character))
+                        character.y-=5;
+                    break;
             }
+            frame+=0.25;;
+            if(frame == 4)
+                frame = 0;
         }
         // Background
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, image_texture, NULL, NULL);
-        int coll = detect_collision(character);
-        if(coll)
-        {
-            printf("KOLIZJA!!!");
-        }
+
         // Player
-        SDL_RenderCopyEx(renderer, SpriteImage, NULL, &character, 0, NULL, 1);
+        SDL_RenderCopyEx(renderer, SpriteImage, &character_tex[(int)frame], &character, 0, NULL, 0);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(10);
@@ -83,7 +128,7 @@ int main (int argc, char *argv[]) {
 }
 
 int detect_collision(SDL_Rect rect){
-    if(detect_collision_point(rect.x, rect.y)) //left up corner
+    if(detect_collision_point(rect.x, rect.y))//left up corner
         return 1;
     if(detect_collision_point(rect.x+rect.w, rect.y)) // right up corner
         return 1;
@@ -111,6 +156,7 @@ int detect_collision_point(int x, int y){
 
 SDL_Texture *initialize_texture_from_file(const char* file_name, SDL_Renderer *renderer) {
     SDL_Surface *image = IMG_Load(file_name);
+    SDL_SetColorKey(image, 1, SDL_MapRGB( image->format, 255, 0, 0 ));
     SDL_Texture * image_texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_FreeSurface(image);
     return image_texture;
